@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Estufa Inteligente</title>
+  <meta name="description" content="Estufa automatizada com sensores Arduino. Cultive com tecnologia, economia de água e monitoramento remoto.">
+  <meta name="keywords" content="estufa, arduino, automação, sensores, agricultura, tecnologia, cultivo, umidade, temperatura, luminosidade">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="font-sans text-gray-800 bg-gradient-to-b from-green-50 to-white min-h-screen">
+    <div class="header-vinhas-bg-bg"></div>
+    <header class="header-trapezio">
+      <div class="header-content">
+        <h1 class="text-4xl font-extrabold tracking-tight">Estufa Inteligente</h1>
+        <p class="text-md mt-2 md:mt-0">Automatize seu cultivo com sensores Arduino</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="p-12 text-center bg-white section-animate delay-2">
+        <h2 class="text-5xl font-bold mb-6 leading-tight text-green-700">Tecnologia que cultiva por você</h2>
+        <p class="max-w-2xl mx-auto mb-8 text-lg text-gray-700">
+          A estufa automatizada com sensores Arduino ajusta a abertura do teto conforme o clima, mantendo suas plantas sempre protegidas e saudáveis.
+        </p>
+        <button class="btn-principal text-lg px-8 py-4 bg-green-700 hover:bg-green-800 text-white rounded-2xl shadow-md" aria-label="Quero comprar a Estufa Inteligente">
+          Quero Comprar
+        </button>
+      </section>
+
+      <section class="p-12 bg-green-50 section-animate delay-3">
+        <h2 class="text-3xl font-bold mb-10 text-center text-green-800">Como Funciona</h2>
+        <div class="cards-row" style="grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 1100px;">
+          <div class="card card-luz rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300">
+            <div class="card-content p-8">
+              <!-- Sun SVG -->
+              <svg class="mx-auto mb-6" width="48" height="48" viewBox="0 0 24 24" fill="none" role="img" aria-label="Sensor de Luminosidade">
+                <circle cx="12" cy="12" r="5" fill="#fde047"/>
+                <g stroke="#facc15" stroke-width="2" stroke-linecap="round">
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </g>
+              </svg>
+              <h3 class="font-bold text-xl mb-2">Sensor de Luminosidade</h3>
+              <p>Detecta a intensidade do sol e abre o teto automaticamente.</p>
+            </div>
+          </div>
+          <!-- Controle Sustentável -->
+          <div class="card card-sustentavel rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300">
+            <div class="card-content p-8">
+              <!-- Leaf SVG melhorada -->
+              <svg class="mx-auto mb-6" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <path d="M8 40C16 24 40 4 44 4C44 4 44 28 24 44C14 36 8 40 8 40Z" fill="#4ade80" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M24 44C28 32 36 20 44 12" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+                <path d="M24 44C20 36 14 28 8 24" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <h3 class="font-bold text-xl mb-2">Controle Sustentável</h3>
+              <p>Automação energética eficiente com Arduino.</p>
+            </div>
+          </div>
+          <!-- Sensor de Temperatura -->
+          <div class="card card-temperatura rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300">
+            <div class="card-content p-8">
+              <svg class="mx-auto mb-6" width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="2" width="6" height="12" rx="3" fill="#fca5a5"/>
+                <rect x="11" y="14" width="2" height="6" rx="1" fill="#ef4444"/>
+                <circle cx="12" cy="20" r="2" fill="#ef4444"/>
+              </svg>
+              <h3 class="font-bold text-xl mb-2">Sensor de Temperatura</h3>
+              <p>Monitora o calor ambiente e aciona alertas para evitar extremos.</p>
+            </div>
+          </div>
+          <!-- Sensor de Umidade -->
+          <div class="card card-umidade rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300">
+            <div class="card-content p-8">
+              <svg class="mx-auto mb-6" width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0c0-5-7-13-7-13z" fill="#38bdf8"/>
+                <ellipse cx="12" cy="17" rx="4" ry="3" fill="#bae6fd"/>
+              </svg>
+              <h3 class="font-bold text-xl mb-2">Sensor de Umidade</h3>
+              <p>Garante o nível ideal de umidade para o crescimento saudável das plantas.</p>
+            </div>
+          </div>
+          <!-- Display LCD -->
+          <div class="card card-lcd rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300">
+            <div class="card-content p-8">
+              <svg class="mx-auto mb-6" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <rect x="6" y="12" width="36" height="20" rx="3" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+                <rect x="10" y="16" width="28" height="12" rx="2" fill="#a7f3d0"/>
+                <text x="24" y="25" text-anchor="middle" font-size="7" fill="#065f46" font-family="monospace">23°C</text>
+              </svg>
+              <h3 class="font-bold text-xl mb-2">Display LCD</h3>
+              <p>Exibe em tempo real as informações dos sensores para fácil visualização.</p>
+            </div>
+          </div>
+          <!-- Novo Card: Alerta Inteligente -->
+          <div class="card card-alerta rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300">
+            <div class="card-content p-8">
+              <svg class="mx-auto mb-6" width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#fef9c3"/>
+                <path d="M12 8v4" stroke="#f59e42" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="12" cy="16" r="1.5" fill="#f59e42"/>
+                <path d="M12 4v2" stroke="#f59e42" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <h3 class="font-bold text-xl mb-2">Alerta Inteligente</h3>
+              <p>Receba notificações automáticas no celular sobre qualquer anomalia detectada.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white p-12 text-center section-animate delay-4">
+        <h2 class="text-3xl font-bold mb-6 text-green-800">Especificações Técnicas</h2>
+        <ul class="max-w-2xl mx-auto text-left list-disc list-inside text-lg text-gray-700 space-y-2">
+          <li>Estrutura em alumínio galvanizado</li>
+          <li>Sensor DHT22 (temperatura e umidade)</li>
+          <li>Microcontrolador Arduino Uno</li>
+          <li>Servo motor para abertura do teto</li>
+        </ul>
+      </section>
+
+      <section class="p-12 bg-green-100 text-center section-animate delay-2">
+        <h2 class="text-3xl font-bold mb-8 text-green-800">Depoimentos</h2>
+        <div id="depoimentos-carousel" class="depoimentos-cards-container depoimentos-carousel">
+          <div class="depoimentos-pair">
+            <blockquote class="bg-green-50 p-6 rounded-2xl shadow-md text-left">
+              <div class="depoimento-foto" aria-hidden="true"></div>
+              <p class="text-lg">“Depois que instalei a estufa, minhas hortaliças cresceram o dobro. A automação é incrível!”</p>
+              <cite class="block mt-4 font-semibold text-green-700">— João, agricultor</cite>
+            </blockquote>
+            <blockquote class="bg-green-50 p-6 rounded-2xl shadow-md text-left">
+              <div class="depoimento-foto" aria-hidden="true"></div>
+              <p class="text-lg">“O acompanhamento remoto me trouxe tranquilidade. Recomendo para todos que querem praticidade!”</p>
+              <cite class="block mt-4 font-semibold text-green-700">— Beatriz, engenheira agrônoma</cite>
+            </blockquote>
+          </div>
+          <div class="depoimentos-pair">
+            <blockquote class="bg-green-50 p-6 rounded-2xl shadow-md text-left">
+              <div class="depoimento-foto" aria-hidden="true"></div>
+              <p class="text-lg">“A economia de água foi notável após instalar a estufa inteligente.”</p>
+              <cite class="block mt-4 font-semibold text-green-700">— Carla, produtora rural</cite>
+            </blockquote>
+            <blockquote class="bg-green-50 p-6 rounded-2xl shadow-md text-left">
+              <div class="depoimento-foto" aria-hidden="true"></div>
+              <p class="text-lg">“A conectividade Wi-Fi permite monitorar tudo pelo celular, mesmo viajando.”</p>
+              <cite class="block mt-4 font-semibold text-green-700">— Fernanda, pesquisadora</cite>
+            </blockquote>
+          </div>
+        </div>
+        <div class="estufa-img-fullwidth">
+          <img 
+            src="Estufa_4x.jpg" 
+            alt="Foto da Estufa Inteligente"
+            aria-label="Foto da Estufa Inteligente"
+            loading="lazy"
+          />
+        </div>
+      </section>
+
+      <section class="p-12 bg-green-700 text-white text-center section-animate delay-3 garanta-estufa-bg">
+        <h2 class="text-4xl font-bold mb-4">Garanta sua Estufa Agora</h2>
+        <p class="mb-6 text-xl">Apenas R$ 1.299,00 à vista ou em até 10x sem juros</p>
+        <button class="btn-secundario bg-white text-green-700 text-lg font-bold px-8 py-4 rounded-2xl hover:bg-gray-100" aria-label="Comprar agora">
+          Comprar Agora
+        </button>
+      </section>
+    </main>
+
+    <footer class="p-6 text-center text-gray-600 text-sm bg-white border-t section-animate delay-4">
+      &copy; 2025 Estufa Inteligente. Todos os direitos reservados.
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
