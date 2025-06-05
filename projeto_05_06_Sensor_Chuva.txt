@@ -1,0 +1,75 @@
+PROGRAMAR O SENSOR DE AGUA.
+============================
+
+#include <Arduino.h>
+#include <LiquidCrystal_I2C.h>
+
+// Definições de pinos
+#define pinAnalog A0
+#define pinDig 13
+#define pinLedVermelho 14
+#define pinLedVerde 12
+
+// Inicialização do LCD (endereços comuns: 0x27 ou 0x3F)
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+void mostra_Display(int);
+void acende_Led(int);
+
+void setup()
+{
+  Serial.begin(9600);
+
+  lcd.init();
+  lcd.backlight();
+
+  pinMode(pinAnalog, INPUT);
+  pinMode(pinDig, INPUT);
+  pinMode(pinLedVermelho, OUTPUT);
+  pinMode(pinLedVerde, OUTPUT);
+}
+
+void loop()
+{
+  int valorAnalogico = analogRead(pinAnalog);
+  int valorDigital = digitalRead(pinDig);
+
+  Serial.print("Valor analógico do sensor: ");
+  Serial.println(valorAnalogico);
+
+  mostra_Display(valorDigital);
+  acende_Led(valorDigital);
+
+  delay(1000); // Aguarda 1 segundo antes da próxima leitura
+}
+
+void mostra_Display(int valorDigital)
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Sensor de chuva");
+
+  lcd.setCursor(0, 1);
+  if (valorDigital == 0)
+  {
+    lcd.print("Chuva detectada");
+  }
+  else
+  {
+    lcd.print("Sem chuva");
+  }
+}
+
+void acende_Led(int valorDigital)
+{
+  if (valorDigital == 0)
+  {
+    digitalWrite(pinLedVermelho, HIGH);
+    digitalWrite(pinLedVerde, LOW);
+  }
+  else
+  {
+    digitalWrite(pinLedVermelho, LOW);
+    digitalWrite(pinLedVerde, HIGH);
+  }
+}
