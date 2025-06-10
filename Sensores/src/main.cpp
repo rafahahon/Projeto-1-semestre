@@ -4,9 +4,14 @@
 #include <DHT_U.h>
 #include <Wire.h>
 #include <FastLED.h>
+#include <ESP32Servo.h>
+#include <ArduinoJson.h>
+#include <PubSubClient.h>
+#include <WiFi.h>
+#include "internet.h"
 
 //! DHT22
-#define DHTPIN 13
+#define DHTPIN 14
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -14,10 +19,10 @@ DHT dht(DHTPIN, DHTTYPE);
 #define pinAnalogico 34
 
 //! LDR
-#define LDRpin 4
+#define LDRpin 35
 
 //! LEDs 5x5
-#define pinLed 15 // Saída
+#define pinLed 13 // Saída
 #define NUM_LEDS 25 // Número de LEDs
 CRGB leds[NUM_LEDS]; // Array de LEDs
 /*
@@ -33,8 +38,26 @@ uint8_t rainbow_hue = 0;
 void fastShowLed();
 void fastShowLedRainbow4();
 
+//! Microservo
+Servo servo;
+void microservoControl();
+
+// Variáveis para armazenar os dados dos sensores
 float temperatura, umidade, umidadeSolo, luminosidade;
-int tempoEnvio = 2000;
+int tempoEnvio = 1000;
+
+// MQTT
+WiFiClient espClient;
+PubSubClient client(espClient);
+bool envioMqtt = false;
+const char *mqtt_server = "broker.hivemq.com";
+const int mqtt_port = 1883;
+const char *mqtt_id = "esp32-senai134-projeto07";
+const char *mqtt_topic_sub = "senai134/mesa07/esp_sub";
+const char *mqtt_topic_pub = "senai134/mesa07/esp_infoSensores";
+
+void callback(char *, byte *, unsigned int);
+void mqttConnect();
 
 void setup() {
   //DHT22
@@ -52,11 +75,26 @@ void setup() {
   leds[4] = CHSV(rainbow_hue, 255, 64);
   FastLED.show();
 
+  // Microservo
+  servo.attach(18);
+
+  // MQTT
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
+  conectaWiFi();
+
   Serial.begin(9600);
 }
 
 void loop() {
+  checkWiFi();
+  if (!client.connected()) mqttConnect();
+  client.loop();
+
   fastShowLedRainbow4(); // Atualiza apenas o LED 4 com arco-íris
+  
+  JsonDocument doc;
+  String mensagem = "";
 
   static unsigned long tempoAnterior = 0;
   unsigned long tempoAtual = millis();
@@ -72,6 +110,32 @@ void loop() {
     //LDR
     luminosidade = analogRead(LDRpin);
 
+    // Microservo
+    microservoControl();
+
+    // MQTT
+    if (!isnan(temperatura)
+     && !isnan(umidade)
+     && !isnan(umidadeSolo)
+     && !isnan(luminosidade)) {
+      doc["umidade"] = umidade;
+      doc["temperatura"] = temperatura;
+      doc["umidadeSolo"] = umidadeSolo;
+      doc["luminosidade"] = luminosidade;
+      doc["tempoEnvio"] = tempoEnvio;
+      envioMqtt = true;
+    } else {
+      Serial.println("Leitura inválida do DHT no envio periódico");
+    }
+
+    if (envioMqtt) {
+      mensagem = "";
+      serializeJson(doc, mensagem);
+      Serial.println(mensagem);
+      client.publish(mqtt_topic_pub, mensagem.c_str());
+      envioMqtt = false;
+    }
+
     // LEDs
     fastShowLed();
 
@@ -82,8 +146,8 @@ void loop() {
 void fastShowLedRainbow4() {
   static unsigned long tempoAnterior = 0;
   unsigned long tempoAtual = millis();
-  if (tempoAtual - tempoAnterior > 500){
-    rainbow_hue += 8; // Ajuste a velocidade do arco-íris conforme desejado
+  if (tempoAtual - tempoAnterior > 100){
+    rainbow_hue += 1; // Ajuste a velocidade do arco-íris conforme desejado
     leds[4] = CHSV(rainbow_hue, 255, 64);
     FastLED.show();
     tempoAnterior = tempoAtual;
@@ -270,4 +334,82 @@ void fastShowLed() {
   }
 
   FastLED.show();
+}
+
+void microservoControl() {
+  static unsigned long tempoAnterior = 0;
+  unsigned long tempoAtual = millis();
+  if (tempoAtual - tempoAnterior > 5000) {
+    if (luminosidade < 1000) {
+    // * Breu maximo
+    servo.write(180);
+
+    } else if (luminosidade >= 1000 && luminosidade < 2000) {
+      // * Escurinho
+      servo.write(135);
+
+    } else if (luminosidade >= 2000 && luminosidade < 3400) {
+      // * Sombra
+      servo.write(90);
+
+    } else if (luminosidade >= 3400 && luminosidade < 3800) {
+      // * Ideal
+      servo.write(45);
+
+    } else if (luminosidade >= 3800) {
+      // * Muita luz
+      servo.write(5);
+
+    }
+
+    tempoAnterior = tempoAtual;
+  }
+}
+
+void callback(char *topic, byte *payLoad, unsigned int length) {
+  Serial.printf("Mensagem recebida em %s: ", topic);
+
+  String mensagem = "";
+  for (unsigned int i = 0; i < length; i++) {
+    mensagem += (char)payLoad[i];
+  }
+
+  JsonDocument doc;
+  deserializeJson(doc, mensagem.c_str());
+
+  if (!doc["umidade"].isNull()) {
+    umidade = doc["umidade"];
+  }
+
+  if (!doc["temperatura"].isNull()) {
+    temperatura = doc["temperatura"];
+  }
+
+  if (!doc["umidadeSolo"].isNull()) {
+    umidadeSolo = doc["umidadeSolo"];
+  }
+
+  if (!doc["luminosidade"].isNull()) {
+    luminosidade = doc["luminosidade"];
+  }
+
+  if (!doc["tempoEnvio"].isNull()) {
+    tempoEnvio = doc["tempoEnvio"];
+  }
+}
+
+void mqttConnect() {
+  while (!client.connected()) {
+    Serial.println("Conectando ao MQTT...");
+
+    if (client.connect(mqtt_id)) {
+      Serial.println("Conectado com sucesso");
+      client.subscribe(mqtt_topic_sub);
+    } else {
+      Serial.print("Falha, rc=");
+      Serial.println(client.state());
+      Serial.println("Tentando novamente em 5 segundos");
+      delay(5000);
+    }
+  }
 }
