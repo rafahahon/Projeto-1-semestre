@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <FastLED.h>
 #include <ESP32Servo.h>
+#include <ezTime.h>
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
@@ -42,11 +43,16 @@ void fastShowLedRainbow();
 Servo servo;
 void microservoControl();
 
-// Variáveis para armazenar os dados dos sensores
+
+//! ezTime
+Timezone tempoLocal;
+unsigned long timestamp = 0;
+
+// * Variáveis para armazenar os dados dos sensores
 float temperatura, umidade, umidadeSolo, luminosidade;
 int tempoEnvio = 1000;
 
-// MQTT
+// * MQTT
 WiFiClient espClient;
 PubSubClient client(espClient);
 bool envioMqtt = false;
@@ -82,7 +88,11 @@ void setup() {
   client.setCallback(callback);
   conectaWiFi();
 
+  // ezTime
   Serial.begin(9600);
+  Serial.println("Sincronizando com o servidor de horário...");
+  waitForSync();
+  tempoLocal.setLocation("America/Sao_Paulo");
 }
 
 void loop() {
@@ -112,6 +122,9 @@ void loop() {
     // Microservo
     microservoControl();
 
+    // ezTime
+    timestamp = now();
+
     // MQTT
     if (!isnan(temperatura)
      && !isnan(umidade)
@@ -121,6 +134,7 @@ void loop() {
       doc["temperatura"] = temperatura;
       doc["umidadeSolo"] = umidadeSolo;
       doc["luminosidade"] = luminosidade;
+      doc["timestamp"] = timestamp;
       doc["tempoEnvio"] = tempoEnvio;
       envioMqtt = true;
     } else {
@@ -166,39 +180,39 @@ void fastShowLed() {
     leds[24] = CRGB(0, 0, 0);
 
   } else if(temperatura >= 10 && temperatura < 15) {
-    leds[20] = CRGB(32, 16, 0);
+    leds[20] = CRGB(8, 4, 0);
     leds[21] = CRGB(0, 0, 0);
     leds[22] = CRGB(0, 0, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
 
   } else if (temperatura >= 15 && temperatura < 20) {
-    leds[20] = CRGB(32, 16, 0);
-    leds[21] = CRGB(36, 12, 0);
+    leds[20] = CRGB(8, 4, 0);
+    leds[21] = CRGB(9, 3, 0);
     leds[22] = CRGB(0, 0, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
     
   } else if (temperatura >= 20 && temperatura < 25) {
-    leds[20] = CRGB(32, 16, 0);
-    leds[21] = CRGB(36, 12, 0);
-    leds[22] = CRGB(40, 8, 0);
+    leds[20] = CRGB(8, 4, 0);
+    leds[21] = CRGB(9, 3, 0);
+    leds[22] = CRGB(10, 2, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
 
   } else if (temperatura >= 25 && temperatura < 30) {
-    leds[20] = CRGB(32, 16, 0);
-    leds[21] = CRGB(36, 12, 0);
-    leds[22] = CRGB(40, 8, 0);
-    leds[23] = CRGB(44, 4, 0);
+    leds[20] = CRGB(8, 4, 0);
+    leds[21] = CRGB(9, 3, 0);
+    leds[22] = CRGB(10, 2, 0);
+    leds[23] = CRGB(11, 1, 0);
     leds[24] = CRGB(0, 0, 0);
     
   } else if (temperatura >= 30) {
-    leds[20] = CRGB(32, 16, 0);
-    leds[21] = CRGB(36, 12, 0);
-    leds[22] = CRGB(40, 8, 0);
-    leds[23] = CRGB(44, 4, 0);
-    leds[24] = CRGB(48, 0, 0);
+    leds[20] = CRGB(8, 4, 0);
+    leds[21] = CRGB(9, 3, 0);
+    leds[22] = CRGB(10, 2, 0);
+    leds[23] = CRGB(11, 1, 0);
+    leds[24] = CRGB(12, 0, 0);
   }
 
   // * Umidade do Ar
@@ -210,39 +224,39 @@ void fastShowLed() {
     leds[15] = CRGB(0, 0, 0);
 
   } else if (umidade > 0 && umidade < 20) {
-    leds[19] = CRGB(0, 24, 24);
+    leds[19] = CRGB(0, 6, 6);
     leds[18] = CRGB(0, 0, 0);
     leds[17] = CRGB(0, 0, 0);
     leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
 
   } else if (umidade >= 20 && umidade < 40) {
-    leds[19] = CRGB(0, 24, 24);
-    leds[18] = CRGB(0, 18, 30);
+    leds[19] = CRGB(0, 6, 6);
+    leds[18] = CRGB(0, 4, 7);
     leds[17] = CRGB(0, 0, 0);
     leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
     
   } else if (umidade >= 40 && umidade < 60) {
-    leds[19] = CRGB(0, 24, 24);
-    leds[18] = CRGB(0, 18, 30);
-    leds[17] = CRGB(0, 12, 36);
+    leds[19] = CRGB(0, 6, 6);
+    leds[18] = CRGB(0, 4, 7);
+    leds[17] = CRGB(0, 3, 9);
     leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
 
   } else if (umidade >= 60 && umidade < 80) {
-    leds[19] = CRGB(0, 24, 24);
-    leds[18] = CRGB(0, 18, 30);
-    leds[17] = CRGB(0, 12, 36);
-    leds[16] = CRGB(0, 6, 42);
+    leds[19] = CRGB(0, 6, 6);
+    leds[18] = CRGB(0, 4, 7);
+    leds[17] = CRGB(0, 3, 9);
+    leds[16] = CRGB(0, 1, 10);
     leds[15] = CRGB(0, 0, 0);
     
   } else if (umidade >= 80) {
-    leds[19] = CRGB(0, 24, 24);
-    leds[18] = CRGB(0, 18, 30);
-    leds[17] = CRGB(0, 12, 36);
-    leds[16] = CRGB(0, 6, 42);
-    leds[15] = CRGB(0, 0, 48);
+    leds[19] = CRGB(0, 6, 6);
+    leds[18] = CRGB(0, 4, 7);
+    leds[17] = CRGB(0, 3, 9);
+    leds[16] = CRGB(0, 1, 10);
+    leds[15] = CRGB(0, 0, 12);
   }
 
   // * Umidade do Solo
@@ -254,39 +268,39 @@ void fastShowLed() {
     leds[14] = CRGB(0, 0, 0);
 
   } else if (umidadeSolo <= 4000 && umidadeSolo > 3000) {
-    leds[10] = CRGB(0, 48, 0);
+    leds[10] = CRGB(0, 12, 0);
     leds[11] = CRGB(0, 0, 0);
     leds[12] = CRGB(0, 0, 0);
     leds[13] = CRGB(0, 0, 0);
     leds[14] = CRGB(0, 0, 0);
     
   } else if (umidadeSolo <= 3000 && umidadeSolo > 2500) {
-    leds[10] = CRGB(0, 48, 0);
-    leds[11] = CRGB(6, 37, 0);
+    leds[10] = CRGB(0, 12, 0);
+    leds[11] = CRGB(1, 9, 0);
     leds[12] = CRGB(0, 0, 0);
     leds[13] = CRGB(0, 0, 0);
     leds[14] = CRGB(0, 0, 0);
 
   } else if (umidadeSolo <= 2500 && umidadeSolo > 700) {
-    leds[10] = CRGB(0, 48, 0);
-    leds[11] = CRGB(6, 37, 0);
-    leds[12] = CRGB(12, 36, 0);
+    leds[10] = CRGB(0, 12, 0);
+    leds[11] = CRGB(1, 9, 0);
+    leds[12] = CRGB(3, 9, 0);
     leds[13] = CRGB(0, 0, 0);
     leds[14] = CRGB(0, 0, 0);
 
   } else if (umidadeSolo <= 700 && umidadeSolo > 400) {
-    leds[10] = CRGB(0, 48, 0);
-    leds[11] = CRGB(6, 37, 0);
-    leds[12] = CRGB(12, 36, 0);
-    leds[13] = CRGB(18, 30, 0);
+    leds[10] = CRGB(0, 12, 0);
+    leds[11] = CRGB(1, 9, 0);
+    leds[12] = CRGB(3, 9, 0);
+    leds[13] = CRGB(4, 7, 0);
     leds[14] = CRGB(0, 0, 0);
     
   } else if (umidadeSolo <= 400) {
-    leds[10] = CRGB(0, 48, 0);
-    leds[11] = CRGB(6, 37, 0);
-    leds[12] = CRGB(12, 36, 0);
-    leds[13] = CRGB(18, 30, 0);
-    leds[14] = CRGB(24, 24, 0);
+    leds[10] = CRGB(0, 12, 0);
+    leds[11] = CRGB(1, 9, 0);
+    leds[12] = CRGB(3, 9, 0);
+    leds[13] = CRGB(4, 7, 0);
+    leds[14] = CRGB(6, 6, 0);
     
   }
 
@@ -299,39 +313,39 @@ void fastShowLed() {
     leds[5] = CRGB(0, 0, 0);
 
   } else if(luminosidade >= 200 && luminosidade < 1000){
-    leds[9] = CRGB(16, 0, 32);
+    leds[9] = CRGB(4, 0, 8);
     leds[8] = CRGB(0, 0, 0);
     leds[7] = CRGB(0, 0, 0);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
 
   } else if (luminosidade >= 1000 && luminosidade < 2000) {
-    leds[9] = CRGB(16, 0, 32);
-    leds[8] = CRGB(18, 0, 30);
+    leds[9] = CRGB(4, 0, 8);
+    leds[8] = CRGB(4, 0, 7);
     leds[7] = CRGB(0, 0, 0);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
     
   } else if (luminosidade >= 2000 && luminosidade < 3400) {
-    leds[9] = CRGB(16, 0, 32);
-    leds[8] = CRGB(18, 0, 30);
-    leds[7] = CRGB(20, 0, 28);
+    leds[9] = CRGB(4, 0, 8);
+    leds[8] = CRGB(4, 0, 7);
+    leds[7] = CRGB(5, 0, 7);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
     
   } else if (luminosidade >= 3400 && luminosidade < 3800) {
-    leds[9] = CRGB(16, 0, 32);
-    leds[8] = CRGB(18, 0, 30);
-    leds[7] = CRGB(20, 0, 28);
-    leds[6] = CRGB(22, 0, 26);
+    leds[9] = CRGB(4, 0, 8);
+    leds[8] = CRGB(4, 0, 7);
+    leds[7] = CRGB(5, 0, 7);
+    leds[6] = CRGB(5, 0, 6);
     leds[5] = CRGB(0, 0, 0);
     
   } else if (luminosidade >= 3800) {
-    leds[9] = CRGB(16, 0, 32);
-    leds[8] = CRGB(18, 0, 30);
-    leds[7] = CRGB(20, 0, 28);
-    leds[6] = CRGB(22, 0, 26);
-    leds[5] = CRGB(24, 0, 24);
+    leds[9] = CRGB(4, 0, 8);
+    leds[8] = CRGB(4, 0, 7);
+    leds[7] = CRGB(5, 0, 7);
+    leds[6] = CRGB(5, 0, 6);
+    leds[5] = CRGB(6, 0, 6);
     
   }
 
@@ -393,6 +407,10 @@ void callback(char *topic, byte *payLoad, unsigned int length) {
 
   if (!doc["luminosidade"].isNull()) {
     luminosidade = doc["luminosidade"];
+  }
+
+  if (!doc["timestamp"].isNull()) {
+    timestamp = doc["timestamp"];
   }
 
   if (!doc["tempoEnvio"].isNull()) {
