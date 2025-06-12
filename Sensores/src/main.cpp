@@ -34,9 +34,9 @@ CRGB leds[NUM_LEDS]; // Array de LEDs
 */
 
 // Variável para efeito arco-íris no LED 4
-uint8_t rainbow_hue = 0;
+uint8_t rainbow_hue[5] = {0, 10, 20, 30, 40}; // Cores do arco-íris
 void fastShowLed();
-void fastShowLedRainbow4();
+void fastShowLedRainbow();
 
 //! Microservo
 Servo servo;
@@ -72,7 +72,6 @@ void setup() {
   //LEDs 5x5
   FastLED.addLeds<WS2812, pinLed, GRB>(leds, NUM_LEDS);
   fill_solid(leds, NUM_LEDS, CRGB::Black);
-  leds[4] = CHSV(rainbow_hue, 255, 64);
   FastLED.show();
 
   // Microservo
@@ -91,7 +90,7 @@ void loop() {
   if (!client.connected()) mqttConnect();
   client.loop();
 
-  fastShowLedRainbow4(); // Atualiza apenas o LED 4 com arco-íris
+  fastShowLedRainbow(); // Atualiza apenas o LED 4 com arco-íris
   
   JsonDocument doc;
   String mensagem = "";
@@ -143,12 +142,15 @@ void loop() {
   }
 }
 
-void fastShowLedRainbow4() {
+void fastShowLedRainbow() {
   static unsigned long tempoAnterior = 0;
   unsigned long tempoAtual = millis();
-  if (tempoAtual - tempoAnterior > 100){
-    rainbow_hue += 1; // Ajuste a velocidade do arco-íris conforme desejado
-    leds[4] = CHSV(rainbow_hue, 255, 64);
+  if (tempoAtual - tempoAnterior > 12){
+    for (int i = 0; i < 5; i++) {
+      rainbow_hue[i] += 1; // Incrementa o tom de cor
+      if (rainbow_hue[i] >= 255) rainbow_hue[i] = 0; // Reseta o tom se passar de 255
+      leds[i] = CHSV(rainbow_hue[i], 255, 64); // Define a cor do LED
+    }
     FastLED.show();
     tempoAnterior = tempoAtual;
   }
@@ -164,39 +166,39 @@ void fastShowLed() {
     leds[24] = CRGB(0, 0, 0);
 
   } else if(temperatura >= 10 && temperatura < 15) {
-    leds[20] = CRGB(64, 32, 0);
-    leds[21] = CRGB(0, 0, 0);;
-    leds[22] = CRGB(0, 0, 0);;
+    leds[20] = CRGB(32, 16, 0);
+    leds[21] = CRGB(0, 0, 0);
+    leds[22] = CRGB(0, 0, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
 
   } else if (temperatura >= 15 && temperatura < 20) {
-    leds[20] = CRGB(64, 32, 0);
-    leds[21] = CRGB(72, 24, 0);
-    leds[22] = CRGB(0, 0, 0);;
+    leds[20] = CRGB(32, 16, 0);
+    leds[21] = CRGB(36, 12, 0);
+    leds[22] = CRGB(0, 0, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
     
   } else if (temperatura >= 20 && temperatura < 25) {
-    leds[20] = CRGB(64, 32, 0);
-    leds[21] = CRGB(72, 24, 0);
-    leds[22] = CRGB(80, 16, 0);
+    leds[20] = CRGB(32, 16, 0);
+    leds[21] = CRGB(36, 12, 0);
+    leds[22] = CRGB(40, 8, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
 
   } else if (temperatura >= 25 && temperatura < 30) {
-    leds[20] = CRGB(64, 32, 0);
-    leds[21] = CRGB(72, 24, 0);
-    leds[22] = CRGB(80, 16, 0);
-    leds[23] = CRGB(88, 8, 0);
+    leds[20] = CRGB(32, 16, 0);
+    leds[21] = CRGB(36, 12, 0);
+    leds[22] = CRGB(40, 8, 0);
+    leds[23] = CRGB(44, 4, 0);
     leds[24] = CRGB(0, 0, 0);
     
   } else if (temperatura >= 30) {
-    leds[20] = CRGB(64, 32, 0);
-    leds[21] = CRGB(72, 24, 0);
-    leds[22] = CRGB(80, 16, 0);
-    leds[23] = CRGB(88, 8, 0);
-    leds[24] = CRGB(96, 0, 0);
+    leds[20] = CRGB(32, 16, 0);
+    leds[21] = CRGB(36, 12, 0);
+    leds[22] = CRGB(40, 8, 0);
+    leds[23] = CRGB(44, 4, 0);
+    leds[24] = CRGB(48, 0, 0);
   }
 
   // * Umidade do Ar
@@ -208,39 +210,39 @@ void fastShowLed() {
     leds[15] = CRGB(0, 0, 0);
 
   } else if (umidade > 0 && umidade < 20) {
-    leds[19] = CRGB(0, 48, 48);
-    leds[18] = CRGB(0, 0, 0);;
-    leds[17] = CRGB(0, 0, 0);;
-    leds[16] = CRGB(0, 0, 0);;
+    leds[19] = CRGB(0, 24, 24);
+    leds[18] = CRGB(0, 0, 0);
+    leds[17] = CRGB(0, 0, 0);
+    leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
 
   } else if (umidade >= 20 && umidade < 40) {
-    leds[19] = CRGB(0, 48, 48);
-    leds[18] = CRGB(0, 36, 60);
-    leds[17] = CRGB(0, 0, 0);;
-    leds[16] = CRGB(0, 0, 0);;
+    leds[19] = CRGB(0, 24, 24);
+    leds[18] = CRGB(0, 18, 30);
+    leds[17] = CRGB(0, 0, 0);
+    leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
     
   } else if (umidade >= 40 && umidade < 60) {
-    leds[19] = CRGB(0, 48, 48);
-    leds[18] = CRGB(0, 36, 60);
-    leds[17] = CRGB(0, 24, 72);
-    leds[16] = CRGB(0, 0, 0);;
+    leds[19] = CRGB(0, 24, 24);
+    leds[18] = CRGB(0, 18, 30);
+    leds[17] = CRGB(0, 12, 36);
+    leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
 
   } else if (umidade >= 60 && umidade < 80) {
-    leds[19] = CRGB(0, 48, 48);
-    leds[18] = CRGB(0, 36, 60);
-    leds[17] = CRGB(0, 24, 72);
-    leds[16] = CRGB(0, 12, 84);
+    leds[19] = CRGB(0, 24, 24);
+    leds[18] = CRGB(0, 18, 30);
+    leds[17] = CRGB(0, 12, 36);
+    leds[16] = CRGB(0, 6, 42);
     leds[15] = CRGB(0, 0, 0);
     
   } else if (umidade >= 80) {
-    leds[19] = CRGB(0, 48, 48);
-    leds[18] = CRGB(0, 36, 60);
-    leds[17] = CRGB(0, 24, 72);
-    leds[16] = CRGB(0, 12, 84);
-    leds[15] = CRGB(0, 0, 96);
+    leds[19] = CRGB(0, 24, 24);
+    leds[18] = CRGB(0, 18, 30);
+    leds[17] = CRGB(0, 12, 36);
+    leds[16] = CRGB(0, 6, 42);
+    leds[15] = CRGB(0, 0, 48);
   }
 
   // * Umidade do Solo
@@ -252,39 +254,39 @@ void fastShowLed() {
     leds[14] = CRGB(0, 0, 0);
 
   } else if (umidadeSolo <= 4000 && umidadeSolo > 3000) {
-    leds[10] = CRGB(0, 96, 0);
+    leds[10] = CRGB(0, 48, 0);
     leds[11] = CRGB(0, 0, 0);
     leds[12] = CRGB(0, 0, 0);
     leds[13] = CRGB(0, 0, 0);
     leds[14] = CRGB(0, 0, 0);
     
   } else if (umidadeSolo <= 3000 && umidadeSolo > 2500) {
-    leds[10] = CRGB(0, 96, 0);
-    leds[11] = CRGB(12, 74, 0);
+    leds[10] = CRGB(0, 48, 0);
+    leds[11] = CRGB(6, 37, 0);
     leds[12] = CRGB(0, 0, 0);
     leds[13] = CRGB(0, 0, 0);
     leds[14] = CRGB(0, 0, 0);
 
   } else if (umidadeSolo <= 2500 && umidadeSolo > 700) {
-    leds[10] = CRGB(0, 96, 0);
-    leds[11] = CRGB(12, 74, 0);
-    leds[12] = CRGB(24, 72, 0);
+    leds[10] = CRGB(0, 48, 0);
+    leds[11] = CRGB(6, 37, 0);
+    leds[12] = CRGB(12, 36, 0);
     leds[13] = CRGB(0, 0, 0);
     leds[14] = CRGB(0, 0, 0);
 
   } else if (umidadeSolo <= 700 && umidadeSolo > 400) {
-    leds[10] = CRGB(0, 96, 0);
-    leds[11] = CRGB(12, 74, 0);
-    leds[12] = CRGB(24, 72, 0);
-    leds[13] = CRGB(36, 60, 0);
+    leds[10] = CRGB(0, 48, 0);
+    leds[11] = CRGB(6, 37, 0);
+    leds[12] = CRGB(12, 36, 0);
+    leds[13] = CRGB(18, 30, 0);
     leds[14] = CRGB(0, 0, 0);
     
   } else if (umidadeSolo <= 400) {
-    leds[10] = CRGB(0, 96, 0);
-    leds[11] = CRGB(12, 74, 0);
-    leds[12] = CRGB(24, 72, 0);
-    leds[13] = CRGB(36, 60, 0);
-    leds[14] = CRGB(48, 48, 0);
+    leds[10] = CRGB(0, 48, 0);
+    leds[11] = CRGB(6, 37, 0);
+    leds[12] = CRGB(12, 36, 0);
+    leds[13] = CRGB(18, 30, 0);
+    leds[14] = CRGB(24, 24, 0);
     
   }
 
@@ -297,39 +299,39 @@ void fastShowLed() {
     leds[5] = CRGB(0, 0, 0);
 
   } else if(luminosidade >= 200 && luminosidade < 1000){
-    leds[9] = CRGB(32, 0, 64);
+    leds[9] = CRGB(16, 0, 32);
     leds[8] = CRGB(0, 0, 0);
     leds[7] = CRGB(0, 0, 0);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
 
   } else if (luminosidade >= 1000 && luminosidade < 2000) {
-    leds[9] = CRGB(32, 0, 64);
-    leds[8] = CRGB(36, 0, 60);
+    leds[9] = CRGB(16, 0, 32);
+    leds[8] = CRGB(18, 0, 30);
     leds[7] = CRGB(0, 0, 0);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
     
   } else if (luminosidade >= 2000 && luminosidade < 3400) {
-    leds[9] = CRGB(32, 0, 64);
-    leds[8] = CRGB(36, 0, 60);
-    leds[7] = CRGB(40, 0, 56);
+    leds[9] = CRGB(16, 0, 32);
+    leds[8] = CRGB(18, 0, 30);
+    leds[7] = CRGB(20, 0, 28);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
     
   } else if (luminosidade >= 3400 && luminosidade < 3800) {
-    leds[9] = CRGB(32, 0, 64);
-    leds[8] = CRGB(36, 0, 60);
-    leds[7] = CRGB(40, 0, 56);
-    leds[6] = CRGB(44, 0, 52);
+    leds[9] = CRGB(16, 0, 32);
+    leds[8] = CRGB(18, 0, 30);
+    leds[7] = CRGB(20, 0, 28);
+    leds[6] = CRGB(22, 0, 26);
     leds[5] = CRGB(0, 0, 0);
     
   } else if (luminosidade >= 3800) {
-    leds[9] = CRGB(32, 0, 64);
-    leds[8] = CRGB(36, 0, 60);
-    leds[7] = CRGB(40, 0, 56);
-    leds[6] = CRGB(44, 0, 52);
-    leds[5] = CRGB(48, 0, 48);
+    leds[9] = CRGB(16, 0, 32);
+    leds[8] = CRGB(18, 0, 30);
+    leds[7] = CRGB(20, 0, 28);
+    leds[6] = CRGB(22, 0, 26);
+    leds[5] = CRGB(24, 0, 24);
     
   }
 
