@@ -12,18 +12,18 @@
 #include "internet.h"
 
 //! DHT22
-#define DHTPIN 14
+#define DHTPIN 23
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
 //! Sensor de Umidade do Solo
-#define pinAnalogico 34
+#define pinAnalogico 35
 
 //! LDR
-#define LDRpin 35
+#define LDRpin 32
 
 //! LEDs 5x5
-#define pinLed 13 // Saída
+#define pinLed 18 // Saída
 #define NUM_LEDS 25 // Número de LEDs
 CRGB leds[NUM_LEDS]; // Array de LEDs
 /*
@@ -39,18 +39,25 @@ uint8_t rainbow_hue[5] = {0, 10, 20, 30, 40}; // Cores do arco-íris
 void fastShowLed();
 void fastShowLedRainbow();
 
+
+//! LEDs
+#define pinLedVermelho 26
+#define pinLedVerde 25
+#define pinLedBranco 33
+bool estadoLedIrrigacao = false, estadoLedTemperatura = false, estadoLedUmidade = false;
+
 //! Microservo
+#define SERVO_PIN 13
 Servo servo;
 void microservoControl();
-
 
 //! ezTime
 Timezone tempoLocal;
 unsigned long timestamp = 0;
 
 // * Variáveis para armazenar os dados dos sensores
-float temperatura, umidade, umidadeSolo, luminosidade;
-int tempoEnvio = 1000;
+float temperatura, umidade;
+int luminosidade, umidadeSolo, tempoEnvio = 1000;
 
 // * MQTT
 WiFiClient espClient;
@@ -66,6 +73,8 @@ void callback(char *, byte *, unsigned int);
 void mqttConnect();
 
 void setup() {
+  Serial.begin(9600);
+
   //DHT22
   dht.begin();
 
@@ -81,7 +90,7 @@ void setup() {
   FastLED.show();
 
   // Microservo
-  servo.attach(18);
+  servo.attach(SERVO_PIN);
 
   // MQTT
   client.setServer(mqtt_server, mqtt_port);
@@ -89,7 +98,6 @@ void setup() {
   conectaWiFi();
 
   // ezTime
-  Serial.begin(9600);
   Serial.println("Sincronizando com o servidor de horário...");
   waitForSync();
   tempoLocal.setLocation("America/Sao_Paulo");
@@ -109,21 +117,27 @@ void loop() {
   unsigned long tempoAtual = millis();
   if(tempoAtual - tempoAnterior > tempoEnvio){
 
-    //DHT22
+    // DHT22
     temperatura = dht.readTemperature();
     umidade = dht.readHumidity();
+    temperatura >= 30 ? estadoLedTemperatura = true : estadoLedTemperatura = false;
+    umidade >= 70 ? estadoLedUmidade = true : estadoLedUmidade = false;
+    digitalWrite(pinLedVermelho, estadoLedTemperatura);
+    digitalWrite(pinLedBranco, estadoLedUmidade);
     
-    //Sensor de Umidade do Solo
+    // Sensor de Umidade do Solo
     umidadeSolo = analogRead(pinAnalogico);
+    umidadeSolo >= 4000 ? estadoLedIrrigacao = true : estadoLedIrrigacao = false;
+    digitalWrite(pinLedVerde, estadoLedIrrigacao);
 
-    //LDR
+    // LDR
     luminosidade = analogRead(LDRpin);
 
     // Microservo
     microservoControl();
 
     // ezTime
-    timestamp = now();
+    timestamp = now() - 10800;
 
     // MQTT
     if (!isnan(temperatura)
@@ -135,10 +149,13 @@ void loop() {
       doc["umidadeSolo"] = umidadeSolo;
       doc["luminosidade"] = luminosidade;
       doc["timestamp"] = timestamp;
+      doc["estadoLedIrrigacao"] = estadoLedIrrigacao;
+      doc["estadoLedTemperatura"] = estadoLedTemperatura;
+      doc["estadoLedUmidade"] = estadoLedUmidade;
       doc["tempoEnvio"] = tempoEnvio;
       envioMqtt = true;
     } else {
-      Serial.println("Leitura inválida do DHT no envio periódico");
+      Serial.println("Leitura inválida");
     }
 
     if (envioMqtt) {
@@ -149,9 +166,7 @@ void loop() {
       envioMqtt = false;
     }
 
-    // LEDs
     fastShowLed();
-
     tempoAnterior = tempoAtual;
   }
 }
@@ -193,21 +208,21 @@ void fastShowLed() {
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
     
-  } else if (temperatura >= 20 && temperatura < 25) {
+  } else if (temperatura >= 20 && temperatura <= 30) {
     leds[20] = CRGB(8, 4, 0);
     leds[21] = CRGB(9, 3, 0);
     leds[22] = CRGB(10, 2, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
 
-  } else if (temperatura >= 25 && temperatura < 30) {
+  } else if (temperatura > 30 && temperatura < 35) {
     leds[20] = CRGB(8, 4, 0);
     leds[21] = CRGB(9, 3, 0);
     leds[22] = CRGB(10, 2, 0);
     leds[23] = CRGB(11, 1, 0);
     leds[24] = CRGB(0, 0, 0);
     
-  } else if (temperatura >= 30) {
+  } else if (temperatura >= 35) {
     leds[20] = CRGB(8, 4, 0);
     leds[21] = CRGB(9, 3, 0);
     leds[22] = CRGB(10, 2, 0);
@@ -237,14 +252,14 @@ void fastShowLed() {
     leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
     
-  } else if (umidade >= 40 && umidade < 60) {
+  } else if (umidade >= 40 && umidade <= 70) {
     leds[19] = CRGB(0, 6, 6);
     leds[18] = CRGB(0, 4, 7);
     leds[17] = CRGB(0, 3, 9);
     leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
 
-  } else if (umidade >= 60 && umidade < 80) {
+  } else if (umidade > 70 && umidade < 80) {
     leds[19] = CRGB(0, 6, 6);
     leds[18] = CRGB(0, 4, 7);
     leds[17] = CRGB(0, 3, 9);
@@ -355,29 +370,26 @@ void fastShowLed() {
 void microservoControl() {
   static unsigned long tempoAnterior = 0;
   unsigned long tempoAtual = millis();
-  if (tempoAtual - tempoAnterior > 5000) {
+  if (tempoAtual - tempoAnterior > tempoEnvio) {
+    int angulo = 90;
     if (luminosidade < 1000) {
-    // * Breu maximo
-    servo.write(180);
-
-    } else if (luminosidade >= 1000 && luminosidade < 2000) {
-      // * Escurinho
-      servo.write(135);
-
-    } else if (luminosidade >= 2000 && luminosidade < 3400) {
-      // * Sombra
-      servo.write(90);
-
-    } else if (luminosidade >= 3400 && luminosidade < 3800) {
-      // * Ideal
-      servo.write(45);
-
-    } else if (luminosidade >= 3800) {
-      // * Muita luz
-      servo.write(5);
-
+      // Muito escuro
+      angulo = 5;
+    } else if (luminosidade < 2000) {
+      // Escuro
+      angulo = 45;
+    } else if (luminosidade < 3400) {
+      // Meia-luz
+      angulo = 90;
+    } else if (luminosidade < 3800) {
+      // Claro
+      angulo = 135;
+    } else {
+      // Muito claro
+      angulo = 175;
     }
 
+    servo.write(angulo);
     tempoAnterior = tempoAtual;
   }
 }
@@ -411,6 +423,18 @@ void callback(char *topic, byte *payLoad, unsigned int length) {
 
   if (!doc["timestamp"].isNull()) {
     timestamp = doc["timestamp"];
+  }
+
+  if (!doc["estadoLedIrrigacao"].isNull()) {
+    estadoLedIrrigacao = doc["estadoLedIrrigacao"];
+  }
+
+  if (!doc["estadoLedTemperatura"].isNull()) {
+    estadoLedTemperatura = doc["estadoLedTemperatura"];
+  }
+
+  if (!doc["estadoLedUmidade"].isNull()) {
+    estadoLedUmidade = doc["estadoLedUmidade"];
   }
 
   if (!doc["tempoEnvio"].isNull()) {
