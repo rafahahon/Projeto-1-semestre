@@ -14,25 +14,21 @@ int posicoesBotoes = 0;
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-
 //* Borda Menu
-byte cantoEsquerdo[] = {B10100, B10100, B10100, B10100, B10100, B10100, B10100, B10100};
-byte cantoSuperiorEsquerdo[] = {B11111, B10000, B10111, B10100, B10100, B10100, B10100, B10100};
-byte cantoSuperior[] = {B11111, B00000, B11111, B00000, B00000, B00000, B00000, B00000};
-byte cantoSuperiorDireito[] = {B11111, B00001, B11101, B00101, B00101, B00101, B00101, B00101};
-byte cantoDireito[] = {B00101, B00101, B00101, B00101, B00101, B00101, B00101, B00101};
-byte cantoInferiorDireito[] = {B00101, B00101, B00101, B00101, B00101, B11101, B00001, B11111};
-byte cantoInferior[] = {B00000, B00000, B00000, B00000, B00000, B11111, B00000, B11111};
-byte cantoInferiorEsquerdo[] = {B10100, B10100, B10100, B10100, B10100, B10111, B10000, B11111};
+byte bordaLinha[] = {B00000, B00000, B00000, B11111, B11111, B00000, B00000, B00000};
 
-#define esq 0
-#define supEsq 1
-#define sup 2
-#define supDir 3
-#define dir 4
-#define infDir 5
-#define inf 6
-#define infEsq 7
+//* Caracteres
+byte aTil[] = {B00101, B01010, B00000, B01110, B00001, B01111, B10001, B01111};
+byte cedilha[] = {B00000, B01110, B10000, B10000, B10001, B01110, B00100, B01000};
+
+//* Seta
+byte seta[] = {B00000, B00000, B00100, B00010, B11111, B00010, B00100, B00000};
+
+//* Indices dos caracteres
+#define borda 0
+#define atilChar 1
+#define cedilhaChar 2
+#define setaChar 3
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -45,6 +41,7 @@ const char *mqtt_topic_pub = "senai134/mesa07/esp_pub";
 
 int luminosidade, umidadeSolo;
 float umidadeAr, temperatura;
+bool estadoLedIrrigacao = false, estadoLedTemperatura = false, estadoLedUmidade = false;
 
 Timezone tempoLocal;
 unsigned long timestamp = 0;
@@ -68,14 +65,14 @@ void setup()
   client.setCallback(callBack);
 
   //* Borda Menu
-  lcd.createChar(esq, cantoEsquerdo);
-  lcd.createChar(supEsq, cantoSuperiorEsquerdo);
-  lcd.createChar(sup, cantoSuperior);
-  lcd.createChar(supDir, cantoSuperiorDireito);
-  lcd.createChar(dir, cantoDireito);
-  lcd.createChar(infDir, cantoInferiorDireito);
-  lcd.createChar(inf, cantoInferior);
-  lcd.createChar(infEsq, cantoInferiorEsquerdo);
+  lcd.createChar(borda, bordaLinha);
+
+  //* Caracteres
+  lcd.createChar(atilChar, aTil);
+  lcd.createChar(cedilhaChar, cedilha);
+
+  //* Seta
+  lcd.createChar(setaChar, seta);
 
   //*LCD
   menuInicial();
@@ -106,7 +103,7 @@ void loop()
     lcd.print(" ");
     posicoesBotoes++;
     lcd.setCursor(0, posicoesBotoes);
-    lcd.print(">");
+    lcd.write(setaChar);
   }
   valorAnteriorBaixo = valorSetinhaBaixo;
 
@@ -116,7 +113,7 @@ void loop()
     lcd.print(" ");
     posicoesBotoes--;
     lcd.setCursor(0, posicoesBotoes);
-    lcd.print(">");
+    lcd.write(setaChar);
   }
   valorAnteriorCima = valorSetinhaCima;
 
@@ -136,10 +133,27 @@ void loop()
   if (!menu)
   {
     unsigned long tempoAtual = millis();
+    static unsigned long tempoAnterior = 0;
+    if (tempoAtual - tempoAnterior > 1000) //Atualiza a cada segundo o horário
+    {
+      lcd.setCursor(1, 3);
+      tempoLocal.setTime(timestamp);
+      lcd.print(tempoLocal.dateTime("d/m H:i"));
+  
+      // Adiciona Manhã/Tarde/Noite ao lado do horário
+      int horaAtual = tempoLocal.hour();
+      if (horaAtual >= 0 && horaAtual < 12){
+      //lcd.print(" Manhã");
+        lcd.print(" Manh");
+        lcd.setCursor(17, 3);
+        lcd.write(atilChar);
+      }
+      else if (horaAtual >= 12 && horaAtual < 18)
+        lcd.print(" Tarde");
+      else
+        lcd.print(" Noite");
+    }
 
-     lcd.setCursor (2,2);
-     tempoLocal.setTime (timestamp);
-     lcd.print (tempoLocal.dateTime ("d/m/Y H:i"));
 
     switch (posicoesBotoes)
     {
@@ -154,7 +168,7 @@ void loop()
         lcd.setCursor(4, 0);
         lcd.print("Luminosidade");
         lcd.setCursor(7, 1);
-        lcd.print(">");
+        lcd.write(setaChar); 
         opcao = false;
       }
 
@@ -162,16 +176,20 @@ void loop()
       {
         lcd.setCursor(2, 1);
         lcd.print("    ");
-        if (luminosidade < 1000 && luminosidade >= 100) lcd.setCursor (3,1);
-        else if (luminosidade < 100 && luminosidade >= 10) lcd.setCursor (4,1);
-        else if (luminosidade < 10) lcd.setCursor (5,1);
-        else lcd.setCursor(2,1);
-        lcd.print (luminosidade);
+        if (luminosidade < 1000 && luminosidade >= 100)
+          lcd.setCursor(3, 1);
+        else if (luminosidade < 100 && luminosidade >= 10)
+          lcd.setCursor(4, 1);
+        else if (luminosidade < 10)
+          lcd.setCursor(5, 1);
+        else
+          lcd.setCursor(2, 1);
+        lcd.print(luminosidade);
 
         lcd.setCursor(9, 1);
-        if (luminosidade < 200)  
+        if (luminosidade < 200)
           lcd.print("Sem luz  ");
-        else if (luminosidade >= 200 && luminosidade < 1000) 
+        else if (luminosidade >= 200 && luminosidade < 1000)
           lcd.print("Breu     ");
         else if (luminosidade >= 1000 && luminosidade < 2000)
           lcd.print("Escurinho");
@@ -199,7 +217,7 @@ void loop()
         lcd.print("Umidade do ar");
 
         lcd.setCursor(7, 1);
-        lcd.print(">");
+        lcd.write(setaChar);
         opcao = false;
       }
 
@@ -209,27 +227,31 @@ void loop()
         lcd.print("    ");
         if (umidadeAr < 10)
         {
-          lcd.setCursor (3,1);
-          lcd.print (umidadeAr, 1);
+          lcd.setCursor(3, 1);
+          lcd.print(umidadeAr, 1);
         }
         if (umidadeAr < 100 && umidadeAr >= 10)
         {
-          lcd.setCursor (2,1);
-          lcd.print (umidadeAr, 1);
+          lcd.setCursor(2, 1);
+          lcd.print(umidadeAr, 1);
         }
-        if (umidadeAr >= 100) 
+        if (umidadeAr >= 100)
         {
-          lcd.setCursor (3,1);
-          lcd.print (umidadeAr, 0);
+          lcd.setCursor(3, 1);
+          lcd.print(umidadeAr, 0);
         }
-        
 
         lcd.setCursor(9, 1);
-        if (umidadeAr < 20)      lcd.print("Ar seco ");
-        else if (umidadeAr >= 20 && umidadeAr < 40) lcd.print("Baixa   ");
-        else if (umidadeAr >= 40 && umidadeAr <= 70)lcd.print("Adequada");
-        else if (umidadeAr > 70 && umidadeAr < 80) lcd.print("Alta    ");
-        else                     lcd.print("Abafado ");
+        if (umidadeAr < 20)
+          lcd.print("Ar seco ");
+        else if (umidadeAr >= 20 && umidadeAr < 40)
+          lcd.print("Baixa   ");
+        else if (umidadeAr >= 40 && umidadeAr <= 70)
+          lcd.print("Adequada");
+        else if (umidadeAr > 70 && umidadeAr < 80)
+          lcd.print("Alta    ");
+        else
+          lcd.print("Abafado ");
 
         tempoAnterior1 = tempoAtual;
       }
@@ -248,7 +270,17 @@ void loop()
         lcd.print("Umidade do solo");
 
         lcd.setCursor(7, 1);
-        lcd.print(">");
+        lcd.write(setaChar);
+
+        lcd.setCursor(2, 2);
+        lcd.print("Irrigacao = ");
+        lcd.setCursor(8, 2);
+        lcd.write(cedilhaChar);
+        lcd.write(atilChar);
+
+        lcd.setCursor(14, 2);
+        lcd.print(estadoLedIrrigacao ? "ON " : "OFF");
+
         opcao = false;
       }
 
@@ -256,16 +288,20 @@ void loop()
       {
         lcd.setCursor(2, 1);
         lcd.print("    ");
-        if (umidadeSolo < 1000 && umidadeSolo >= 100) lcd.setCursor (3,1);
-        else if (umidadeSolo < 100 && umidadeSolo >= 10) lcd.setCursor (4,1);
-        else if (umidadeSolo < 10) lcd.setCursor (5,1);
-        else lcd.setCursor(2,1);
-        lcd.print (umidadeSolo);
+        if (umidadeSolo < 1000 && umidadeSolo >= 100)
+          lcd.setCursor(3, 1);
+        else if (umidadeSolo < 100 && umidadeSolo >= 10)
+          lcd.setCursor(4, 1);
+        else if (umidadeSolo < 10)
+          lcd.setCursor(5, 1);
+        else
+          lcd.setCursor(2, 1);
+        lcd.print(umidadeSolo);
 
         lcd.setCursor(9, 1);
         if (umidadeSolo <= 400)
           lcd.print("Lama      ");
-        else if (umidadeSolo <= 700 && umidadeSolo > 400 )
+        else if (umidadeSolo <= 700 && umidadeSolo > 400)
           lcd.print("Molhado   ");
         else if (umidadeSolo <= 2500 && umidadeSolo > 700)
           lcd.print("Adequada  ");
@@ -291,7 +327,7 @@ void loop()
         lcd.print("Temperatura");
 
         lcd.setCursor(7, 1);
-        lcd.print(">");
+        lcd.write(setaChar);
         opcao = false;
       }
 
@@ -301,18 +337,18 @@ void loop()
         lcd.print("    ");
         if (temperatura < 10)
         {
-          lcd.setCursor (3,1);
-          lcd.print (temperatura, 1);
+          lcd.setCursor(3, 1);
+          lcd.print(temperatura, 1);
         }
         else if (temperatura < 100 && temperatura >= 10)
         {
-          lcd.setCursor (2,1);
-          lcd.print (temperatura, 1);
+          lcd.setCursor(2, 1);
+          lcd.print(temperatura, 1);
         }
-        else if (temperatura >= 100) 
+        else if (temperatura >= 100)
         {
-          lcd.setCursor (3,1);
-          lcd.print (temperatura, 0);
+          lcd.setCursor(3, 1);
+          lcd.print(temperatura, 0);
         }
 
         lcd.setCursor(9, 1);
@@ -375,6 +411,18 @@ void callBack(char *topic, byte *payLoad, unsigned int length)
   {
     timestamp = doc["timestamp"];
   }
+  if (!doc["estadoLedIrrigacao"].isNull())
+  {
+    estadoLedIrrigacao = doc["estadoLedIrrigacao"];
+  }
+  if (!doc["estadoLedTemperatura"].isNull())
+  {
+    estadoLedTemperatura = doc["estadoLedTemperatura"];
+  }
+  if (!doc["estadoLedUmidade"].isNull())
+  {
+    estadoLedUmidade = doc["estadoLedUmidade"];
+  }
 }
 
 void mqttConnect()
@@ -401,10 +449,9 @@ void mqttConnect()
 
 void menuInicial()
 {
-
   //* Setinha inicial
   lcd.setCursor(0, posicoesBotoes);
-  lcd.print(">");
+  lcd.write(setaChar);
 
   //* Tela inicial
   lcd.setCursor(2, 0);
@@ -422,26 +469,7 @@ void menuInicial()
 
 void bordaMenu()
 {
-  // Linha superior
   lcd.setCursor(0, 0);
-  lcd.write(supEsq);
-  for (int i = 0; i < 18; i++)
-    lcd.write(sup);
-  lcd.write(supDir);
-
-  // Linhas do meio (laterais)
-  for (int i = 1; i <= 2; i++)
-  {
-    lcd.setCursor(0, i);
-    lcd.write(esq);
-    lcd.setCursor(19, i);
-    lcd.write(dir);
-  }
-
-  // Linha inferior
-  lcd.setCursor(0, 3);
-  lcd.write(infEsq);
-  for (int i = 0; i < 18; i++)
-    lcd.write(inf);
-  lcd.write(infDir);
+  for (int i = 0; i < 20; i++)
+    lcd.write(borda);
 }
