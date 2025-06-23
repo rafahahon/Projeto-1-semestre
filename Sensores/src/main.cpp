@@ -38,7 +38,13 @@ CRGB leds[NUM_LEDS]; // Array de LEDs
 uint8_t rainbow_hue[5] = {0, 10, 20, 30, 40}; // Cores do arco-íris
 void fastShowLed();
 void fastShowLedRainbow();
+#define vazio CRGB(0, 0, 0)
 
+//! Fita LED
+#define LED_PIN 14 // Saída
+#define NUM_LEDS2 24 // Número de LEDs
+CRGB leds2[NUM_LEDS2]; // Array de LEDs
+#define corBranca CRGB(255, 255, 255)
 
 //! LEDs
 #define pinLedVermelho 26
@@ -81,12 +87,17 @@ void setup() {
   // Sensor de Umidade do Solo
   pinMode(pinAnalogico, INPUT);
 
-  //LDR
+  // LDR
   pinMode(LDRpin, INPUT);
 
-  //LEDs 5x5
+  // FITA LED
+  FastLED.addLeds<WS2812, LED_PIN, GRB>(leds2, NUM_LEDS2);
+  fill_solid(leds2, NUM_LEDS2, corBranca);
+  FastLED.show();
+
+  // LEDS 5x5
   FastLED.addLeds<WS2812, pinLed, GRB>(leds, NUM_LEDS);
-  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  fill_solid(leds, NUM_LEDS, vazio);
   FastLED.show();
 
   // Microservo
