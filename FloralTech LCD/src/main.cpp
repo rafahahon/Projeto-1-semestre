@@ -134,16 +134,17 @@ void loop()
   {
     unsigned long tempoAtual = millis();
     static unsigned long tempoAnterior = 0;
-    if (tempoAtual - tempoAnterior > 1000) //Atualiza a cada segundo o horário
+    if (tempoAtual - tempoAnterior > 1000) // Atualiza a cada segundo o horário
     {
       lcd.setCursor(1, 3);
       tempoLocal.setTime(timestamp);
       lcd.print(tempoLocal.dateTime("d/m H:i"));
-  
+
       // Adiciona Manhã/Tarde/Noite ao lado do horário
       int horaAtual = tempoLocal.hour();
-      if (horaAtual >= 0 && horaAtual < 12){
-      //lcd.print(" Manhã");
+      if (horaAtual >= 0 && horaAtual < 12)
+      {
+        // lcd.print(" Manhã");
         lcd.print(" Manh");
         lcd.setCursor(17, 3);
         lcd.write(atilChar);
@@ -153,7 +154,6 @@ void loop()
       else
         lcd.print(" Noite");
     }
-
 
     switch (posicoesBotoes)
     {
@@ -167,8 +167,13 @@ void loop()
         bordaMenu();
         lcd.setCursor(4, 0);
         lcd.print("Luminosidade");
+
         lcd.setCursor(7, 1);
-        lcd.write(setaChar); 
+        lcd.write(setaChar);
+
+        lcd.setCursor(1, 2);
+        lcd.print("Cobertura ");
+
         opcao = false;
       }
 
@@ -188,17 +193,41 @@ void loop()
 
         lcd.setCursor(9, 1);
         if (luminosidade < 200)
+        {
           lcd.print("Sem luz  ");
+          lcd.setCursor(11, 2);
+          lcd.print("aberta ");
+        }
         else if (luminosidade >= 200 && luminosidade < 1000)
+        {
           lcd.print("Breu     ");
+          lcd.setCursor(11, 2);
+          lcd.print("aberta ");
+        }
         else if (luminosidade >= 1000 && luminosidade < 2000)
+        {
           lcd.print("Escurinho");
+          lcd.setCursor(11, 2);
+          lcd.print("aberta ");
+        }
         else if (luminosidade >= 2000 && luminosidade < 3400)
+        {
           lcd.print("Sombra   ");
+          lcd.setCursor(11, 2);
+          lcd.print("aberta");
+        }
         else if (luminosidade >= 3400 && luminosidade < 3800)
+        {
           lcd.print("Adequada ");
+          lcd.setCursor(11, 2);
+          lcd.print("aberta");
+        }
         else
+        {
           lcd.print("Muita luz");
+          lcd.setCursor(11, 2);
+          lcd.print("fechada");
+        }
 
         tempoAnterior0 = tempoAtual;
       }
@@ -218,6 +247,13 @@ void loop()
 
         lcd.setCursor(7, 1);
         lcd.write(setaChar);
+
+        lcd.setCursor(2, 2);
+        lcd.print("Ventilacao: ");
+        lcd.setCursor(9, 2);
+        lcd.write(cedilhaChar);
+        lcd.write(atilChar);
+
         opcao = false;
       }
 
@@ -253,6 +289,9 @@ void loop()
         else
           lcd.print("Abafado ");
 
+        lcd.setCursor(14, 2);
+        lcd.print(estadoLedTemperatura ? "ON " : "OFF");
+
         tempoAnterior1 = tempoAtual;
       }
       break;
@@ -273,13 +312,10 @@ void loop()
         lcd.write(setaChar);
 
         lcd.setCursor(2, 2);
-        lcd.print("Irrigacao = ");
+        lcd.print("Irrigacao: ");
         lcd.setCursor(8, 2);
         lcd.write(cedilhaChar);
         lcd.write(atilChar);
-
-        lcd.setCursor(14, 2);
-        lcd.print(estadoLedIrrigacao ? "ON " : "OFF");
 
         opcao = false;
       }
@@ -310,6 +346,9 @@ void loop()
         else
           lcd.print("Muito seco");
 
+        lcd.setCursor(13, 2);
+        lcd.print(estadoLedIrrigacao ? "ON " : "OFF");
+
         tempoAnterior2 = tempoAtual;
       }
       break;
@@ -328,6 +367,13 @@ void loop()
 
         lcd.setCursor(7, 1);
         lcd.write(setaChar);
+
+        lcd.setCursor(1, 2);
+        lcd.print("Refrigeracao: ");
+        lcd.setCursor(10, 2);
+        lcd.write(cedilhaChar);
+        lcd.write(atilChar);
+
         opcao = false;
       }
 
@@ -364,6 +410,9 @@ void loop()
           lcd.print("Quente   ");
         else
           lcd.print("Forno    ");
+
+        lcd.setCursor(15, 2);
+        lcd.print(estadoLedTemperatura ? "ON " : "OFF");
 
         tempoAnterior3 = tempoAtual;
       }
