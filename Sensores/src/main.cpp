@@ -23,7 +23,7 @@ DHT dht(DHTPIN, DHTTYPE);
 #define LDRpin 32
 
 //! LEDs 5x5
-#define pinLed 18 // Saída
+#define pinLed 22 // Saída
 #define NUM_LEDS 25 // Número de LEDs
 CRGB leds[NUM_LEDS]; // Array de LEDs
 /*
@@ -43,13 +43,13 @@ void fastShowLedRainbow();
 //! Fita LED
 #define LED_PIN 14 // Saída
 #define NUM_LEDS2 24 // Número de LEDs
+#define corBranca CRGB(16, 16, 16)
 CRGB leds2[NUM_LEDS2]; // Array de LEDs
-#define corBranca CRGB(255, 255, 255)
 
 //! LEDs
-#define pinLedVermelho 26
-#define pinLedVerde 25
-#define pinLedBranco 33
+#define pinLedVermelho 19
+#define pinLedVerde 21
+#define pinLedBranco 18
 bool estadoLedIrrigacao = false, estadoLedTemperatura = false, estadoLedUmidade = false;
 
 //! Microservo
@@ -81,7 +81,7 @@ void mqttConnect();
 void setup() {
   Serial.begin(9600);
 
-  //DHT22
+  // DHT22
   dht.begin();
 
   // Sensor de Umidade do Solo
@@ -93,12 +93,16 @@ void setup() {
   // FITA LED
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds2, NUM_LEDS2);
   fill_solid(leds2, NUM_LEDS2, corBranca);
-  FastLED.show();
 
   // LEDS 5x5
   FastLED.addLeds<WS2812, pinLed, GRB>(leds, NUM_LEDS);
   fill_solid(leds, NUM_LEDS, vazio);
   FastLED.show();
+
+  // LEDs
+  pinMode(pinLedVermelho, OUTPUT);
+  pinMode(pinLedVerde, OUTPUT);
+  pinMode(pinLedBranco, OUTPUT);
 
   // Microservo
   servo.attach(SERVO_PIN);
@@ -120,7 +124,7 @@ void loop() {
   client.loop();
 
   fastShowLedRainbow(); // Atualiza apenas o LED 4 com arco-íris
-  
+ 
   JsonDocument doc;
   String mensagem = "";
 
@@ -135,10 +139,10 @@ void loop() {
     umidade >= 70 ? estadoLedUmidade = true : estadoLedUmidade = false;
     digitalWrite(pinLedVermelho, estadoLedTemperatura);
     digitalWrite(pinLedBranco, estadoLedUmidade);
-    
+   
     // Sensor de Umidade do Solo
     umidadeSolo = analogRead(pinAnalogico);
-    umidadeSolo >= 4000 ? estadoLedIrrigacao = true : estadoLedIrrigacao = false;
+    umidadeSolo >= 2500 ? estadoLedIrrigacao = true : estadoLedIrrigacao = false;
     digitalWrite(pinLedVerde, estadoLedIrrigacao);
 
     // LDR
@@ -176,7 +180,6 @@ void loop() {
       client.publish(mqtt_topic_pub, mensagem.c_str());
       envioMqtt = false;
     }
-
     fastShowLed();
     tempoAnterior = tempoAtual;
   }
@@ -189,7 +192,7 @@ void fastShowLedRainbow() {
     for (int i = 0; i < 5; i++) {
       rainbow_hue[i] += 1; // Incrementa o tom de cor
       if (rainbow_hue[i] >= 255) rainbow_hue[i] = 0; // Reseta o tom se passar de 255
-      leds[i] = CHSV(rainbow_hue[i], 255, 64); // Define a cor do LED
+      leds[i] = CHSV(rainbow_hue[i], 255, 32); // Define a cor do LED
     }
     FastLED.show();
     tempoAnterior = tempoAtual;
@@ -218,7 +221,7 @@ void fastShowLed() {
     leds[22] = CRGB(0, 0, 0);
     leds[23] = CRGB(0, 0, 0);
     leds[24] = CRGB(0, 0, 0);
-    
+   
   } else if (temperatura >= 20 && temperatura <= 30) {
     leds[20] = CRGB(8, 4, 0);
     leds[21] = CRGB(9, 3, 0);
@@ -232,7 +235,7 @@ void fastShowLed() {
     leds[22] = CRGB(10, 2, 0);
     leds[23] = CRGB(11, 1, 0);
     leds[24] = CRGB(0, 0, 0);
-    
+   
   } else if (temperatura >= 35) {
     leds[20] = CRGB(8, 4, 0);
     leds[21] = CRGB(9, 3, 0);
@@ -262,7 +265,7 @@ void fastShowLed() {
     leds[17] = CRGB(0, 0, 0);
     leds[16] = CRGB(0, 0, 0);
     leds[15] = CRGB(0, 0, 0);
-    
+   
   } else if (umidade >= 40 && umidade <= 70) {
     leds[19] = CRGB(0, 6, 6);
     leds[18] = CRGB(0, 4, 7);
@@ -276,7 +279,7 @@ void fastShowLed() {
     leds[17] = CRGB(0, 3, 9);
     leds[16] = CRGB(0, 1, 10);
     leds[15] = CRGB(0, 0, 0);
-    
+   
   } else if (umidade >= 80) {
     leds[19] = CRGB(0, 6, 6);
     leds[18] = CRGB(0, 4, 7);
@@ -299,7 +302,7 @@ void fastShowLed() {
     leds[12] = CRGB(0, 0, 0);
     leds[13] = CRGB(0, 0, 0);
     leds[14] = CRGB(0, 0, 0);
-    
+   
   } else if (umidadeSolo <= 3000 && umidadeSolo > 2500) {
     leds[10] = CRGB(0, 12, 0);
     leds[11] = CRGB(1, 9, 0);
@@ -320,14 +323,14 @@ void fastShowLed() {
     leds[12] = CRGB(3, 9, 0);
     leds[13] = CRGB(4, 7, 0);
     leds[14] = CRGB(0, 0, 0);
-    
+   
   } else if (umidadeSolo <= 400) {
     leds[10] = CRGB(0, 12, 0);
     leds[11] = CRGB(1, 9, 0);
     leds[12] = CRGB(3, 9, 0);
     leds[13] = CRGB(4, 7, 0);
     leds[14] = CRGB(6, 6, 0);
-    
+   
   }
 
   // * Luminosidade
@@ -351,28 +354,28 @@ void fastShowLed() {
     leds[7] = CRGB(0, 0, 0);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
-    
+   
   } else if (luminosidade >= 2000 && luminosidade < 3400) {
     leds[9] = CRGB(4, 0, 8);
     leds[8] = CRGB(4, 0, 7);
     leds[7] = CRGB(5, 0, 7);
     leds[6] = CRGB(0, 0, 0);
     leds[5] = CRGB(0, 0, 0);
-    
+   
   } else if (luminosidade >= 3400 && luminosidade < 3800) {
     leds[9] = CRGB(4, 0, 8);
     leds[8] = CRGB(4, 0, 7);
     leds[7] = CRGB(5, 0, 7);
     leds[6] = CRGB(5, 0, 6);
     leds[5] = CRGB(0, 0, 0);
-    
+   
   } else if (luminosidade >= 3800) {
     leds[9] = CRGB(4, 0, 8);
     leds[8] = CRGB(4, 0, 7);
     leds[7] = CRGB(5, 0, 7);
     leds[6] = CRGB(5, 0, 6);
     leds[5] = CRGB(6, 0, 6);
-    
+   
   }
 
   FastLED.show();
